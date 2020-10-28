@@ -7,6 +7,7 @@ public class Table implements Comparable<Table> {
     private Long id;
     private Integer number;
     private Integer capacity;
+    private boolean booked;
 
 
     public Table() {
@@ -17,6 +18,14 @@ public class Table implements Comparable<Table> {
         this.id = id;
         this.number = number;
         this.capacity = capacity;
+    }
+
+    public boolean isBooked() {
+        return booked;
+    }
+
+    public void setBooked(boolean booked) {
+        this.booked = booked;
     }
 
     public Long getId() {
@@ -55,7 +64,8 @@ public class Table implements Comparable<Table> {
 
     }
 
-
-
-
+    @Override
+    public String toString() {
+        return String.format("%-5s %-10s %s\n",id,number,capacity);
+    }
 }

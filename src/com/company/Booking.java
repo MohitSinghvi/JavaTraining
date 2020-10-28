@@ -2,8 +2,7 @@ package com.company;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Booking {
     private Long id;
@@ -13,9 +12,22 @@ public class Booking {
     private Double billAmount;
     private Date bookingTime;
 
-    static Long bookingId=100L;
+//    static Long bookingId=100L;
 
     public Booking() {
+    }
+    public static Map<Date,Double> calculateDayBilling(List<Booking> bookings){
+        Map<Date,Double> billingMap = new HashMap<>();
+        for(Booking booking : bookings){
+            if(!billingMap.containsKey(booking.getBookingTime())){
+                billingMap.put(booking.getBookingTime(),booking.billAmount);
+            }
+            else{
+                billingMap.put(booking.getBookingTime(),billingMap.get(booking.getBookingTime())+booking.billAmount);
+            }
+
+        }
+        return billingMap;
     }
 
     public Booking(Long id, String customerName, Table table, Integer memberPresent, Double billAmount, Date bookingTime) {
@@ -80,16 +92,29 @@ public class Booking {
         Integer tableNumber = Integer.parseInt(bookingDetails[2]);
         SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
         Date date;
+        boolean bookingDone =false;
         try {
              date = df.parse(bookingDetails[5]);
             for(Booking booking: bookingList){
                 if(booking.getTable().getNumber().equals(tableNumber) && booking.getBookingTime().equals(date)){
                     System.out.println("Sorry, table not available");
-                }
-                else{
-//                    Booking booking1 = new Booking()
+                    return;
                 }
             }
+            for(Table table : tableList){
+                if(table.getNumber()==tableNumber && table.getCapacity()>=Integer.parseInt(bookingDetails[3])){
+                    Booking booking1 = new Booking(Long.parseLong(bookingDetails[0]),bookingDetails[1],table,Integer.parseInt(bookingDetails[3]),Double.parseDouble(bookingDetails[4]), date);
+                    bookingList.add(booking1);
+                    System.out.println("Booking Successful");
+                    bookingDone=true;
+                    table.setBooked(true);
+                    break;
+//                    return;
+                }
+
+            }
+            if (!bookingDone)
+                System.out.println("Sorry, table not available");
         } catch (ParseException e) {
             e.printStackTrace();
         }
