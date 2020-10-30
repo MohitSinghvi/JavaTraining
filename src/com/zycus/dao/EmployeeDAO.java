@@ -1,44 +1,52 @@
-package JDBC;
+package com.zycus.dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MyDBConnect {
-    private Connection con;
+import com.zycus.bo.Employee;
+import com.zycus.utils.DBConnect;
+import com.zycus.utils.EmployeeCRUDOps;
+
+public class EmployeeDAO {
+
+    Connection connection;
     private PreparedStatement saveEmpPS;
     private PreparedStatement getEmpPS;
     private PreparedStatement getAllEmpPS;
     private PreparedStatement updateEmpPS;
     private PreparedStatement deleteEmpPS;
 
+    public EmployeeDAO(){
 
+        try {
+            connection = DBConnect.getConnection();
+            if(connection!=null) {
+                getAllEmpPS = connection.prepareStatement(EmployeeCRUDOps.GET_ALL_EMPLOYEES);
+                getEmpPS=connection.prepareStatement(EmployeeCRUDOps.GET_EMPLOYEE);
+                updateEmpPS=connection.prepareStatement(EmployeeCRUDOps.UPDATE_EMP_QUERY);
+                deleteEmpPS=connection.prepareStatement(EmployeeCRUDOps.DELETE_EMP_QUERY);
+                saveEmpPS=connection.prepareStatement(EmployeeCRUDOps.SAVE_EMP_QUERY);
 
-    public MyDBConnect(){
+            }
 
-        try{
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb","root","password");
-
-            String save_emp_query = "insert into employee(empId, empName,city,salary) values(?,?,?,?)";
-            String get_emp_query = "select * from employee where empId= ?";
-            String get_all_emp_query= "select * from employee";
-            String delete_emp_query= "delete from employee where empId = ?";
-            String update_emp_query="update employee set empName=?, city=?, salary=? where empId = ? ";
-
-            saveEmpPS =con.prepareStatement(save_emp_query);
-            getEmpPS =con.prepareStatement(get_emp_query);
-            getAllEmpPS =con.prepareStatement(get_all_emp_query);
-            deleteEmpPS =con.prepareStatement(delete_emp_query);
-            updateEmpPS = con.prepareStatement(update_emp_query);
 
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
 
+    }
+
+    public Employee getEmployeeObject(ResultSet emp_result){
+        try {
+            return new Employee(emp_result.getInt("empId"),emp_result.getString("empName"),emp_result.getString("city"),emp_result.getDouble("salary"));
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return null;
     }
 
     public Employee getEmployee(int id){
@@ -55,28 +63,21 @@ public class MyDBConnect {
         return null;
     }
 
-    public Employee getEmployeeObject(ResultSet emp_result){
-        try {
-            return new Employee(emp_result.getInt("empId"),emp_result.getString("empName"),emp_result.getString("city"),emp_result.getDouble("salary"));
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return null;
-    }
+    public List<Employee> getEmployees(){
+        List<Employee> employeeList = new ArrayList();
+        ResultSet result = null;
 
-    public List<Employee> getAllEmployees(){
-        List<Employee> employeeList = new ArrayList<>();
         try {
-            ResultSet result = getAllEmpPS.executeQuery();
+            result = getAllEmpPS.executeQuery();
             while(result.next()){
                 employeeList.add(getEmployeeObject(result));
             }
 
-            return employeeList;
-        } catch (SQLException throwables) {
+        }catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return null;
+        return employeeList;
+
     }
 
     public Employee saveEmployee(Employee emp){
@@ -109,7 +110,7 @@ public class MyDBConnect {
             updateEmpPS.setInt(4,emp.getEmpId());
 
             if(updateEmpPS.executeUpdate()>0){
-                System.out.println("Update Successful");
+//                System.out.println("Update Successful");
                 return emp;
             }
 
@@ -136,11 +137,12 @@ public class MyDBConnect {
     }
 
     public void closeDB(){
-        try {
-            con.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
+            DBConnect.closeConnection(connection);
     }
+
+
+
+
+    //..
 
 }
